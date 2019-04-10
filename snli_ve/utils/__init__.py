@@ -1,0 +1,1 @@
+from snli_ve.utils.detector_util import SimpleDetector
