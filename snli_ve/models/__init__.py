@@ -1,0 +1,1 @@
+from snli_ve.models.simple_fusion import SimpleFusion

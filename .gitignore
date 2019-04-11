@@ -111,6 +111,7 @@ data/
 models/
 # Temp
 doc/
+!snli_ve/models/
 notebooks/
 resources/
 scripts/
