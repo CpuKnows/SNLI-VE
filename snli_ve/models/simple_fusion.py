@@ -60,7 +60,7 @@ class SimpleFusion(Model):
         initializer(self)
 
     def forward(self,
-                premise_img: torch.LongTensor,
+                premise_img: torch.Tensor,
                 hypothesis: Dict[str, torch.Tensor],
                 label: torch.LongTensor = None) -> Dict[str, torch.Tensor]:
         """

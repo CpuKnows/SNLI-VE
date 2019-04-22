@@ -1,8 +1,8 @@
 {
-  "train_data_path": "data/snli_ve_hard_small_train.jsonl",
+  "train_data_path": "data/snli_ve_hard_10k_train.jsonl",
   "dataset_reader": {
     "type": "snlive",
-    "img_h5fn": "data/flickr30k-resnet50-features/all_images.h5",
+    "img_h5fn": "data/resnet50-features/all_images.h5",
     "lazy": true
   },
   "model": {
@@ -26,10 +26,11 @@
       "input_dim": 1536,
       "num_layers": 2,
       "hidden_dims": [512, 3],
-      "activations": ["relu", "relu"],
+      "activations": ["relu", "linear"],
       "dropout": [0.5, 0]
     },
     "detector_final_dim": 512,
+    "dropout": 0.5,
     "initializer": [
       [".*_output_feedforward.*weight", {"type": "xavier_uniform"}],
       [".*_output_feedforward.*bias", {"type": "zero"}],
@@ -47,12 +48,12 @@
   "trainer": {
     "optimizer": {
       "type": "adam",
-      "lr": 0.0001,
+      "lr": 0.0004,
       "weight_decay": 0.0
     },
     "num_serialized_models_to_keep": 2,
     "num_epochs": 100,
-    "grad_norm": 1.0,
+    "grad_norm": 10.0,
     "patience": 3
   }
 }
