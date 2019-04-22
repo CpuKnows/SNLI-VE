@@ -1,6 +1,10 @@
 {
   "train_data_path": "data/snli_ve_train.jsonl",
   "validation_data_path": "data/snli_ve_dev.jsonl",
+  "vocabulary": {
+    "directory_path": "models/vocabulary",
+    "extend": false
+  },
   "dataset_reader": {
     "type": "snlive",
     "img_h5fn": "data/resnet50-features/all_images.h5",
@@ -44,7 +48,8 @@
   "iterator": {
     "type": "bucket",
     "batch_size": 128,
-    "sorting_keys": [["hypothesis", "num_tokens"]]
+    "sorting_keys": [["hypothesis", "num_tokens"]],
+    "max_instances_in_memory": 10240
   },
   "trainer": {
     "optimizer": {
@@ -57,6 +62,7 @@
     "num_epochs": 20,
     "grad_norm": 10.0,
     "patience": 3,
+    "cuda_device": 0,
     "learning_rate_scheduler": {
       "type": "reduce_on_plateau",
       "factor": 0.5,
