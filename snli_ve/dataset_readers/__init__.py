@@ -1,1 +1,2 @@
 from snli_ve.dataset_readers.snli_ve import SNLIVEDatasetReader
+from snli_ve.dataset_readers.snli_ve_detectron import SNLIVERoiDatasetReader
