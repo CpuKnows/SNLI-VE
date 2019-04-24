@@ -9,6 +9,7 @@
     "type": "snlive_detectron",
     "img_dir": "data/flickr30k-images",
     "metadata_dir": "data/detectron",
+    "min_box_prob": null,
     "lazy": true
   },
   "model": {

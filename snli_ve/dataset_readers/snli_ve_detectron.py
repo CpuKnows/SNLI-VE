@@ -100,13 +100,14 @@ class SNLIVERoiDatasetReader(DatasetReader):
                 # adjust box coordinates by left and top padding
                 # img_padding [left, top, right, bottom]
                 boxes[:, :2] += np.array(img_padding[:2])[None]
+                boxes[:, 2:] += np.array(img_padding[:2])[None]
 
                 if self.add_image_as_box:
                     boxes = np.row_stack((window, boxes))
 
                 if not np.all((boxes[:, 0] >= 0.) & (boxes[:, 0] < boxes[:, 2])):
-                    import ipdb
-                    ipdb.set_trace()
+                    import pdb
+                    pdb.set_trace()
                 assert np.all((boxes[:, 1] >= 0.) & (boxes[:, 1] < boxes[:, 3]))
                 assert np.all((boxes[:, 2] <= image.shape[2]))
                 assert np.all((boxes[:, 3] <= image.shape[1]))
