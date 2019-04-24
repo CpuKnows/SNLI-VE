@@ -24,6 +24,7 @@ class ROIAttention(Model):
                  vocab: Vocabulary,
                  text_field_embedder: TextFieldEmbedder,
                  encoder: Seq2SeqEncoder,
+                 attended_encoder: Seq2SeqEncoder,
                  output_feedforward: FeedForward,
                  regularizer: Optional[RegularizerApplicator] = None,
                  detector_final_dim: int = 512,
@@ -34,6 +35,7 @@ class ROIAttention(Model):
         :param vocab:
         :param text_field_embedder:
         :param encoder:
+        :param attended_encoder:
         :param output_feedforward:
         :param regularizer:
         :param detector_final_dim:
@@ -57,6 +59,8 @@ class ROIAttention(Model):
             matrix_1_dim=encoder.get_output_dim(),
             matrix_2_dim=self.detector.final_dim
         )
+
+        self._attended_encoder = attended_encoder
 
         self._output_feedforward = output_feedforward
 
@@ -89,12 +93,29 @@ class ROIAttention(Model):
 
         box_mask = torch.all(boxes >= 0, -1)
         obj_reps = self.detector(premise_img, boxes, box_mask)
+        #obj_reps = {'obj_reps': torch.rand(boxes.shape[0], boxes.shape[1], 512)}
 
-        hyp2obj_sim = self.obj_attention(encoded_hypothesis, obj_reps)
-        hyp2obj_att_weights = masked_softmax(hyp2obj_sim, box_mask[:, None, None])
-        attended_o = torch.einsum('bnao,bod->bnad', hyp2obj_att_weights, obj_reps['obj_reps'])
+        # Hypothesis to object attention
+        hyp2obj_sim = self.obj_attention(encoded_hypothesis, obj_reps['obj_reps'])  # [batch_size, hyp_len, obj_rep_len]
+        hyp2obj_att_weights = masked_softmax(hyp2obj_sim, box_mask)  #
+        attended_o = torch.einsum('bao,bod->bad', hyp2obj_att_weights, obj_reps['obj_reps'])
 
-        label_logits = self._output_feedforward(attended_o)
+        # Concatenate attended objects with encoded hypothesis
+        concat_reps = torch.cat([encoded_hypothesis, attended_o], -1)
+        #concat_reps = replace_masked_values(concat_reps, hypothesis_mask, -1e7)
+
+        if self.rnn_input_dropout:
+            concat_reps = self.rnn_input_dropout(concat_reps)
+
+        encoded_concat_reps = self._attended_encoder(concat_reps, hypothesis_mask)
+
+        concat_rep_hidden_state = get_final_encoder_states(
+            encoded_concat_reps,
+            hypothesis_mask,
+            self._attended_encoder.is_bidirectional()
+        )
+
+        label_logits = self._output_feedforward(concat_rep_hidden_state)
         label_probs = nn.functional.softmax(label_logits, dim=-1)
 
         output_dict = {

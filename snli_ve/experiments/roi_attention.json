@@ -24,12 +24,19 @@
     "encoder": {
       "type": "lstm",
       "input_size": 300,
+      "hidden_size": 256,
+      "num_layers": 1,
+      "bidirectional": true
+    },
+    "attended_encoder": {
+      "type": "lstm",
+      "input_size": 1024,
       "hidden_size": 512,
       "num_layers": 1,
       "bidirectional": true
     },
     "output_feedforward": {
-      "input_dim": 1536,
+      "input_dim": 1024,
       "num_layers": 2,
       "hidden_dims": [512, 3],
       "activations": ["relu", "linear"],
