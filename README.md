@@ -1,6 +1,7 @@
 # SNLI-VE
 
 Experiments with multi-modal entailment using an early fusion model and an attention model over words and image objects.
+https://github.com/CpuKnows/SNLI-VE
 
 SNLI-VE corpus compiled by Xie et al. (2018)
 

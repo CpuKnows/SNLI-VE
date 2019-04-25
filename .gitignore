@@ -112,6 +112,7 @@ data/*
 data/fasttext_data/*
 !data/fasttext_data/prediction_*
 !data/predictions
+!data/sample
 models/
 # Temp
 doc/
