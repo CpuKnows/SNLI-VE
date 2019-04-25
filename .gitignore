@@ -107,7 +107,11 @@ venv.bak/
 .idea/
 
 # Project files
-data/
+data/*
+!data/fasttext_data
+data/fasttext_data/*
+!data/fasttext_data/prediction_*
+!data/predictions
 models/
 # Temp
 doc/
