@@ -114,4 +114,12 @@ doc/
 !snli_ve/models/
 notebooks/
 resources/
-scripts/
+scripts/*
+!scripts/allennlp_predict_wrapper.py
+!scripts/allennlp_train_wrapper.py
+!scripts/calculate_accuracy.py
+!scripts/config.py
+!scripts/create_fasttext_datasets.py
+!scripts/create_snli_hard.py
+!scripts/infer_snlive.py
+!scripts/subset_snli_ve_data.py
