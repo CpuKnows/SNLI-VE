@@ -1,0 +1,2 @@
+from snli_ve.predictors.snli_ve_predictor import SNLIVEFusionPredictor
+from snli_ve.predictors.snli_ve_detectron_predictor import SNLIVERoiPredictor

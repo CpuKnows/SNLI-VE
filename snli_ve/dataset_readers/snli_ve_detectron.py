@@ -54,6 +54,51 @@ class SNLIVERoiDatasetReader(DatasetReader):
     #            metadata['segms'] = masks
     #            return metadata
 
+    def load_image_and_boxes(self, flickr_id):
+        image = load_image(os.path.join(self.img_dir, flickr_id + '.jpg'))
+        image, window, img_padding = resize_image(image)
+        image = to_tensor_and_normalize(image)
+
+        # Load boxes
+        with open(os.path.join(self.metadata_dir, flickr_id + '.json'), 'r') as mf:
+            metadata = json.load(mf)
+
+        try:
+            # TODO: if using class labels and segms these must end up in the same order
+            boxes = np.array(metadata['boxes'])
+            # Keep legal boxes
+            boxes = boxes[(boxes[:, 0] >= 0.) & (boxes[:, 0] < boxes[:, 2])]
+            boxes = boxes[(boxes[:, 1] >= 0.) & (boxes[:, 1] < boxes[:, 3])]
+            # Keep highest probability box detections
+            if self.min_box_prob is not None:
+                to_keep = boxes[:, 4] > self.min_box_prob
+                boxes = boxes[to_keep]
+            # Upper bound on boxes to use
+            if self.max_boxes is not None and boxes.shape[0] > self.max_boxes:
+                sort_idx = np.flipud(boxes[:, 4].argsort())
+                boxes = boxes[sort_idx][:self.max_boxes]
+
+            # remove confidence
+            boxes = boxes[:, :-1]
+            # adjust box coordinates by left and top padding
+            # img_padding [left, top, right, bottom]
+            boxes[:, :2] += np.array(img_padding[:2])[None]
+            boxes[:, 2:] += np.array(img_padding[:2])[None]
+
+            if self.add_image_as_box:
+                boxes = np.row_stack((window, boxes))
+
+            assert boxes.size != 0 and len(boxes.shape) == 2
+            assert np.all((boxes[:, 0] >= 0.) & (boxes[:, 0] < boxes[:, 2]))
+            assert np.all((boxes[:, 1] >= 0.) & (boxes[:, 1] < boxes[:, 3]))
+            assert np.all((boxes[:, 2] <= image.shape[2]))
+            assert np.all((boxes[:, 3] <= image.shape[1]))
+
+        except (AssertionError, IndexError):
+            boxes = np.array([window])
+
+        return image, boxes
+
     def text_to_instance(self, premise_img, boxes, hypothesis, meta_dict, label=None) -> Instance:
         fields: Dict[str, Field] = {}
         hypothesis_tokens = self._tokenizer.tokenize(hypothesis)
@@ -76,41 +121,7 @@ class SNLIVERoiDatasetReader(DatasetReader):
                     continue
 
                 flickr_id = sample['Flikr30kID'][:-4]
-                image = load_image(os.path.join(self.img_dir, flickr_id + '.jpg'))
-                image, window, img_padding = resize_image(image)
-                image = to_tensor_and_normalize(image)
-
-                # Load boxes
-                with open(os.path.join(self.metadata_dir, flickr_id + '.json'), 'r') as mf:
-                    metadata = json.load(mf)
-
-                # TODO: if using class labels and segms these must end up in the same order
-                boxes = np.array(metadata['boxes'])
-                # Keep highest probability box detections
-                if self.min_box_prob is not None:
-                    to_keep = boxes[:, 4] > self.min_box_prob
-                    boxes = boxes[to_keep]
-                # Upper bound on boxes to use
-                if self.max_boxes is not None and boxes.shape[0] > self.max_boxes:
-                    sort_idx = np.flipud(boxes[:, 4].argsort())
-                    boxes = boxes[sort_idx][:self.max_boxes]
-
-                # remove confidence
-                boxes = boxes[:, :-1]
-                # adjust box coordinates by left and top padding
-                # img_padding [left, top, right, bottom]
-                boxes[:, :2] += np.array(img_padding[:2])[None]
-                boxes[:, 2:] += np.array(img_padding[:2])[None]
-
-                if self.add_image_as_box:
-                    boxes = np.row_stack((window, boxes))
-
-                if not np.all((boxes[:, 0] >= 0.) & (boxes[:, 0] < boxes[:, 2])):
-                    import pdb
-                    pdb.set_trace()
-                assert np.all((boxes[:, 1] >= 0.) & (boxes[:, 1] < boxes[:, 3]))
-                assert np.all((boxes[:, 2] <= image.shape[2]))
-                assert np.all((boxes[:, 3] <= image.shape[1]))
+                image, boxes = self._load_image_and_boxes(flickr_id)
 
                 meta_dict = {
                     'pair_id': sample['pairID'],

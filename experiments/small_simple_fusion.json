@@ -48,7 +48,8 @@
     "type": "bucket",
     "batch_size": 128,
     "sorting_keys": [["hypothesis", "num_tokens"]],
-    "max_instances_in_memory": 1024
+    "max_instances_in_memory": 1024,
+
   },
   "trainer": {
     "optimizer": {
